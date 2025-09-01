@@ -8,27 +8,31 @@ DEBUG_FLAGS = -g -O0 -Wall
 # Default build
 default: $(TARGET)
 
-# Build target
-$(TARGET): $(OBJ)
+# Ensure bin/ and obj/ exist
+dirs:
+	mkdir -p bin obj
+
+# Build target (depends on dirs existing)
+$(TARGET): dirs $(OBJ)
 	$(CC) -o $@ $^
 
-# Normal object compilation
-obj/%.o : src/%.c
+# Compile objects (depends on obj/ existing)
+obj/%.o : src/%.c | dirs
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 # Run the program
 run: $(TARGET)
 	./$(TARGET)
 
-# Build with debug symbols
+# Debug build
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: clean $(TARGET)
 
-# Run with valgrind (memory check)
+# Run with valgrind
 valgrind: debug
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
 
-# Clean build artifacts
+# Clean
 clean:
 	rm -f obj/*.o
 	rm -f bin/*
