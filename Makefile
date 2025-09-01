@@ -1,24 +1,30 @@
 TARGET = bin/ahadu
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
+
 CC = gcc
-CFLAGS = -Iinclude
-DEBUG_FLAGS = -g -O0 -Wall
+CFLAGS = -Iinclude -Wall
+LDFLAGS = 
+DEBUG_FLAGS = -g -O0
 
 # Default build
-default: $(TARGET)
+.PHONY: all clean run debug valgrind
 
-# Ensure bin/ and obj/ exist
-dirs:
-	mkdir -p bin obj
+all: $(TARGET)
 
-# Build target (depends on dirs existing)
-$(TARGET): dirs $(OBJ)
-	$(CC) -o $@ $^
+# Build target
+$(TARGET): $(OBJ)
+	@mkdir -p bin
+	$(CC) $(LDFLAGS) -o $@ $^
 
-# Compile objects (depends on obj/ existing)
-obj/%.o : src/%.c | dirs
+# Compile objects
+obj/%.o: src/%.c
+	@mkdir -p obj
 	$(CC) -c $< -o $@ $(CFLAGS)
+
+# Clean
+clean:
+	rm -rf bin obj
 
 # Run the program
 run: $(TARGET)
@@ -26,13 +32,8 @@ run: $(TARGET)
 
 # Debug build
 debug: CFLAGS += $(DEBUG_FLAGS)
-debug: clean $(TARGET)
+debug: clean all
 
 # Run with valgrind
 valgrind: debug
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
-
-# Clean
-clean:
-	rm -f obj/*.o
-	rm -f bin/*
